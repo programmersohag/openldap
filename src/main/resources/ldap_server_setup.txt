@@ -1,0 +1,58 @@
+#update
+sudo apt-get update
+sudo apt-get upgrade
+#install OpenLDAP
+sudo apt install slapd ldap-utils
+#modify the default Directory Information Tree (DIT) suffix
+sudo dpkg-reconfigure slapd
+
+NOTE::You will then be asked to configure the Organization name, and then enter/verify the admin password you created during the installation.
+Once you've done that, select MDB as the database backend, and then select No for removing the database when slapd is purged.
+Finally, select Yes to move the old database, and you're done with the installation and configuration.
+#Populating your LDAP database
+nano ldap_data.ldif
+#In this new file, add the following contents
+dn: ou=People,dc=sohag,dc=com
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Groups,dc=sohag,dc=com
+objectClass: organizationalUnit
+ou: Groups
+
+dn: cn=DEPARTMENT,ou=Groups,dc=sohag,dc=com
+objectClass: posixGroup
+cn: SUBGROUP
+gidNumber: 5000
+
+dn: uid=USER,ou=People,dc=sohag,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: USER
+sn: LASTNAME
+givenName: FIRSTNAME
+cn: FULLNAME
+displayName: DISPLAYNAME
+uidNumber: 10000
+gidNumber: 5000
+userPassword: USER
+gecos: FULLNAME
+loginShell: /bin/bash
+homeDirectory: USERDIRECTORY
+
+# then save and exist from this file and then execute below command
+ldapadd -x -D cn=admin,dc=sohag,dc=com -W -f ldap_data.ldif
+
+#You can then search the database with the command:
+ldapsearch -x -LLL -b dc=sohag,dc=com 'uid=USER' cn gidNumber
+
+#COMMAND DETAILS
+    DEPARTMENT is a department or group you want to add.
+    SUBGROUP is a sub-group of the department.
+    USER is an actual user account on your system.
+    LASTNAME is the last name of the user.
+    FIRSTNAME is the first name of the user.
+    FULLNAME is the full name of the user.
+    DISPLAYNAME is the name you want displayed for the user.
+    USERDIRECTORY is the user's home directory on the Linux server.
